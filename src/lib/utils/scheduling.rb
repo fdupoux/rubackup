@@ -44,9 +44,9 @@ module Scheduling
 
         if (bakdate > limit_daily) then
             'daily'
-        elsif ((bakdate.wday == day_of_week) and (bakdate > limit_monthly)) then
+        elsif ((bakdate.wday == day_of_week) and (bakdate > limit_weekly)) then
             'weekly'
-        elsif ((bakdate.mday == day_of_month) and (bakdate > limit_weekly)) then
+        elsif ((bakdate.mday == day_of_month) and (bakdate > limit_monthly)) then
             'monthly'
         else
             nil

@@ -2,5 +2,8 @@
 #                        ChangeLog for rubackup                              #
 ##############################################################################
 
+* 0.1.1
+  - Fixed bug in scheduling
+
 * 0.1.0 (2015-01-25):
   - First public release
