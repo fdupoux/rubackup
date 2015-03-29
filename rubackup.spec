@@ -31,5 +31,8 @@ rsync -a ${RPM_BUILD_DIR}/rubackup-%{version}/src/ ${RPM_BUILD_ROOT}%{deploydir}
 
 %changelog
 
+* Sun Mar 29 2015 Francois Dupoux - 0.1.1-1
+- Fixed bug in scheduling
+
 * Sun Jan 25 2015 Francois Dupoux - 0.1.0-1
 - First public release
