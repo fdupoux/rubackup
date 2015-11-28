@@ -2,6 +2,9 @@
 #                        ChangeLog for rubackup                              #
 ##############################################################################
 
+* 0.2.0
+  - Upgraded to AWS SDK version 2
+
 * 0.1.1 (2015-03-29):
   - Fixed bug in scheduling
 

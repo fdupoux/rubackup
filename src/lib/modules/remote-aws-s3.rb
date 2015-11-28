@@ -21,7 +21,7 @@
 
 require "#{$progdir}/lib/modules/remote-generic"
 require 'rubygems'
-require 'aws-sdk-v1'
+require 'aws-sdk-resources'
 
 class ModuleRemoteAwsS3 < ModuleRemoteGeneric
 
@@ -45,11 +45,8 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         keypublic = accesskey.fetch('public')
         keysecret = accesskey.fetch('secret')
         # get an instance of the S3 interface.
-        s3 = AWS::S3.new(
-            :access_key_id => keypublic,
-            :secret_access_key => keysecret,
-            :s3_endpoint => "s3-#{awsregion}.amazonaws.com",
-        )
+        creds = Aws::Credentials.new(keypublic, keysecret)
+        s3 = Aws::S3::Client.new(region: awsregion, credentials: creds)
         # return s3 object
         return s3
     end
@@ -62,13 +59,12 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         bucketdata = remote_opts.fetch('s3_bucket')
         bucketname = bucketdata.fetch('bucket')
         s3 = get_s3_access(remote_opts)
-        bucket = s3.buckets[bucketname]
-        allobjs = bucket.objects # all objects including checksums files
+        allobjs = s3.list_objects({bucket: bucketname}).contents # all objects including checksums files
         coreobj = allobjs.select { |obj| ((obj.key =~ /#{basename}-(\d{8})/) and (Checksum.checksum?(obj.key) == false)) }
         coreobj.each do |obj|
             bakfile = Bakfile.new
             bakfile.name = obj.key
-            bakfile.size = obj.content_length
+            bakfile.size = obj.size
             bakfile.date = Scheduling.determine_creation_date(bakfile.name, basename)
             Checksum.list_extensions().each do |sumext|
                 sumobj = allobjs.select { |o| o.key == "#{bakfile.name}.#{sumext}" }
@@ -88,7 +84,9 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         bucketname = bucketdata.fetch('bucket')
         s3 = get_s3_access(remote_opts)
         filename = File.basename(fullpath)
-        s3.buckets[bucketname].objects[filename].write(:file => fullpath)
+        File.open(fullpath, 'rb') do |file|
+          s3.put_object(bucket: bucketname, key: filename, body: file)
+        end
     end
 
     # Delete a file in the bucket
@@ -97,7 +95,7 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         bucketdata = remote_opts.fetch('s3_bucket')
         bucketname = bucketdata.fetch('bucket')
         s3 = get_s3_access(remote_opts)
-        s3.buckets[bucketname].objects.delete(filename)
+        s3.delete_object( { bucket: bucketname, key: filename} )
     end
 
 end

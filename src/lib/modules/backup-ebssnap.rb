@@ -21,7 +21,7 @@
 
 require "#{$progdir}/lib/modules/backup-generic"
 require 'rubygems'
-require 'aws-sdk-v1'
+require 'aws-sdk-core'
 require 'socket'
 
 class ModuleBackupEbsSnap < ModuleBackupGeneric
@@ -53,15 +53,16 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
         accesskey = backup_opts.fetch('accesskey')
         keypublic = accesskey['public']
         keysecret = accesskey['secret']
-        @ec2 = AWS::EC2.new(:access_key_id => keypublic, :secret_access_key => keysecret, :region => awsregion)
+        creds = Aws::Credentials.new(keypublic, keysecret)
+        @ec2 = Aws::EC2::Client.new(region: awsregion, credentials: creds)
     end
 
     def detect_ebs_volumes(instid)
         results = Array.new
-        volumes = @ec2.volumes.select { |vol| (vol.status == :in_use) }
+        volumes = @ec2.describe_volumes(filters: [{name: 'attachment.status', values: ['attached']}]).volumes
         volumes.each do |vol|
             vol.attachments.each do |attach|
-                results.push(vol) if (attach.instance.id == instid)
+                results.push(vol) if (attach.instance_id == instid)
             end
         end
         return results
@@ -138,11 +139,14 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
             # create snapshot while filesystems are frozen and service stopped
             vols.each do |vol|
                 curtime = Time.now.strftime("%Y%m%d-%H%M")
-                snapshot = vol.create_snapshot("rubackup #{basename}")
-                loglines.push("Created snapshot [#{snapshot.id}] of volume=[#{vol.id}]")
-                snapshot.tag('Name', :value => "#{hostname}-#{curtime}")
-                snapshot.tag('Date', :value => "#{$curdate}")
-                snapshot.tag('Product', :value => "rubackup")
+                newtags = [
+                    {key: 'Name', value: "#{hostname}-#{curtime}"},
+                    {key: 'Date', value: "#{$curdate}"},
+                    {key: 'Product', value: "rubackup"},
+                ]
+                snapshot = @ec2.create_snapshot({volume_id: vol.volume_id, description: "rubackup #{basename}"}) 
+                loglines.push("Created snapshot [#{snapshot.snapshot_id}] of volume=[#{vol.volume_id}]")
+                @ec2.create_tags({resources:[snapshot.snapshot_id], tags: newtags})
             end
 
         ensure # unfreeze filesystems and restart services in any circumstances (success or failure)
@@ -185,15 +189,19 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
         instid = detect_ec2_instance_id()
         vols = detect_ebs_volumes(instid)
         vols.each do |vol|
-            snaps1 = @ec2.snapshots.filter('volume-id', vol.id)
-            snaps2 = snaps1.select { |snap| (snap.tags.has_key?('Product') and snap.tags['Product'] == 'rubackup') }
-            snaps3 = snaps2.select { |snap| (snap.tags.has_key?('Name') and snap.tags.has_key?('Date')) }
-            snaps3.each do |snap|
+            snaps = @ec2.describe_snapshots(filters: [{name: 'volume-id', values: [vol.volume_id]},{name: 'tag-key', values: ['Product','Date']}]).snapshots
+            snaps.each do |snap|
                 bakfile = Bakfile.new
-                bakfile.name = snap.id
+                bakfile.name = snap.snapshot_id
                 bakfile.size = snap.volume_size * (1024*1024*1024)
-                bakfile.date = Date.strptime(snap.tags['Date'], '%Y%m%d')
-                results.push(bakfile)
+                tags_date = snap.tags.select { |mytag| (mytag.key == 'Date') }
+                tags_prod = snap.tags.select { |mytag| (mytag.key == 'Product') }
+                tag_date = tags_date[0]['value']
+                tag_prod = tags_prod[0]['value']
+                if (tag_prod == 'rubackup') then
+                    bakfile.date = Date.strptime(tag_date, '%Y%m%d')
+                    results.push(bakfile)
+              end
             end
         end
         return results
@@ -202,16 +210,11 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
     # Delete an old backup
     def delete(entrydata, bakfile)
         snapid = bakfile.name
-        $output.write(4, "ModuleBackupEbsSnap.delete(bakfile=[#{snapid}])")
+        $output.write(4, "ModuleBackupEbsSnap.delete(snapid=[#{snapid}])")
         backup_opts = entrydata.fetch('backup_opts')
         init_ec2_handle(backup_opts)
-        snap = @ec2.snapshots[snapid]
-        if ((snap.is_a?(AWS::EC2::Snapshot)) and (snap.id == snapid)) then
-            $output.write(4, "Deleting EBS Snapshot [#{snap.id}]")
-            snap.delete()
-        else
-            raise "Cannot find EBS snapshot having id=[#{snapid}]"
-        end
+        $output.write(4, "Deleting EBS Snapshot [#{snapid}]")
+        @ec2.delete_snapshot({snapshot_id: snapid})
     end
 
     # Create checksum file

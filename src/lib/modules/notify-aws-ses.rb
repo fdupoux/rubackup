@@ -21,7 +21,7 @@
 
 require "#{$progdir}/lib/modules/notify-generic"
 require 'rubygems'
-require 'aws-sdk-v1'
+require 'aws-sdk-core'
 
 class ModuleNotifyAwsSes < ModuleNotifyGeneric
 
@@ -36,17 +36,15 @@ class ModuleNotifyAwsSes < ModuleNotifyGeneric
         ]
     end
 
-    def get_ses_acces(sesmedia)
+    def get_ses_access(sesmedia)
         # extract information from parameters
         awsregion = sesmedia.fetch('awsregion')
         accesskey = sesmedia.fetch('accesskey')
         keypublic = accesskey['public']
         keysecret = accesskey['secret']
         # get an instance of the S3 interface
-        ses = AWS::SimpleEmailService.new(
-            :access_key_id => keypublic,
-            :secret_access_key => keysecret,
-            :region => awsregion)
+        creds = Aws::Credentials.new(keypublic, keysecret)
+        ses = Aws::SES::Client.new(region: awsregion, credentials: creds)
         # return s3 object
         return ses
     end
@@ -56,12 +54,13 @@ class ModuleNotifyAwsSes < ModuleNotifyGeneric
         sesmedia = notify_args.fetch('ses_media')
         mailsrc = sesmedia.fetch('mailsrc')
         maildst = sesmedia.fetch('maildst')
-        ses = get_ses_acces(sesmedia)
-        ses.send_email(
-             :to        => [maildst],
-             :from      => mailsrc,
-             :subject   => subject,
-             :body_text => contents)
+        ses = get_ses_access(sesmedia)
+        ses.send_email({
+            source: mailsrc,
+            destination: { to_addresses: [maildst] },
+            message: { subject: { data: subject },
+            body: { text: { data: contents } } }
+        })
     end
 
 end

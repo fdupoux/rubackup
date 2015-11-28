@@ -69,8 +69,11 @@ def load_modules()
         $output.write(2, "Attempting to load 'rubygems' ruby module (required for AWS features)...")
         require 'rubygems'
 
-        $output.write(2, "Attempting to load 'aws-sdk-v1' gem module (required for AWS features)...")
-        require 'aws-sdk-v1'
+        $output.write(2, "Attempting to load 'aws-sdk-core' gem module (required for AWS features)...")
+        require 'aws-sdk-core'
+
+        $output.write(2, "Attempting to load 'aws-sdk-resources' gem module (required for AWS features)...")
+        require 'aws-sdk-resources'
 
         $output.write(2, "Loading 'backup' module from '#{$progdir}/lib/modules/backup-ebssnap' ...")
         require "#{$progdir}/lib/modules/backup-ebssnap"

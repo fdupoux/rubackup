@@ -8,6 +8,8 @@ License:            GPLv2
 Group:              Utilities
 Requires:           ruby >= 1.9
 BuildRequires:      tar, rsync
+Requires:           rubygem(aws-sdk-core) >= 2.1.0
+Requires:           rubygem(aws-sdk-resources) >= 2.1.0
 
 %define deploydir   /opt/rubackup
 %define configdir   /etc/rubackup.d
@@ -30,6 +32,9 @@ rsync -a ${RPM_BUILD_DIR}/rubackup-%{version}/src/ ${RPM_BUILD_ROOT}%{deploydir}
 %{deploydir}
 
 %changelog
+
+* Sun Nov 29 2015 Francois Dupoux - 0.2.0-1
+- Upgraded to AWS SDK version 2
 
 * Sun Mar 29 2015 Francois Dupoux - 0.1.1-1
 - Fixed bug in scheduling
