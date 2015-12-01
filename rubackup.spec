@@ -33,6 +33,9 @@ rsync -a ${RPM_BUILD_DIR}/rubackup-%{version}/src/ ${RPM_BUILD_ROOT}%{deploydir}
 
 %changelog
 
+* Tue Dec 01 2015 Francois Dupoux - 0.2.1-1
+- Fixed upload of large files to AWS S3
+
 * Sun Nov 29 2015 Francois Dupoux - 0.2.0-1
 - Upgraded to AWS SDK version 2
 

@@ -46,9 +46,10 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         keysecret = accesskey.fetch('secret')
         # get an instance of the S3 interface.
         creds = Aws::Credentials.new(keypublic, keysecret)
-        s3 = Aws::S3::Client.new(region: awsregion, credentials: creds)
-        # return s3 object
-        return s3
+        s3clt = Aws::S3::Client.new(region: awsregion, credentials: creds)
+        s3res = Aws::S3::Resource.new(:access_key_id => keypublic, :secret_access_key => keysecret, :region => awsregion)
+        # return s3 objects
+        return s3clt,s3res
     end
 
     # Return list of file names found in this bucket for this type of backup
@@ -58,8 +59,8 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         basename = entrydata['bakfile_basename']
         bucketdata = remote_opts.fetch('s3_bucket')
         bucketname = bucketdata.fetch('bucket')
-        s3 = get_s3_access(remote_opts)
-        allobjs = s3.list_objects({bucket: bucketname}).contents # all objects including checksums files
+        s3clt,s3res = get_s3_access(remote_opts)
+        allobjs = s3clt.list_objects({bucket: bucketname}).contents # all objects including checksums files
         coreobj = allobjs.select { |obj| ((obj.key =~ /#{basename}-(\d{8})/) and (Checksum.checksum?(obj.key) == false)) }
         coreobj.each do |obj|
             bakfile = Bakfile.new
@@ -82,11 +83,9 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         remote_opts = entrydata.fetch('remote_opts')
         bucketdata = remote_opts.fetch('s3_bucket')
         bucketname = bucketdata.fetch('bucket')
-        s3 = get_s3_access(remote_opts)
+        s3clt,s3res = get_s3_access(remote_opts)
         filename = File.basename(fullpath)
-        File.open(fullpath, 'rb') do |file|
-          s3.put_object(bucket: bucketname, key: filename, body: file)
-        end
+        s3res.bucket(bucketname).object(filename).upload_file(fullpath)
     end
 
     # Delete a file in the bucket
@@ -94,8 +93,8 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         remote_opts = entrydata.fetch('remote_opts')
         bucketdata = remote_opts.fetch('s3_bucket')
         bucketname = bucketdata.fetch('bucket')
-        s3 = get_s3_access(remote_opts)
-        s3.delete_object( { bucket: bucketname, key: filename} )
+        s3clt,s3res = get_s3_access(remote_opts)
+        s3clt.delete_object( { bucket: bucketname, key: filename} )
     end
 
 end

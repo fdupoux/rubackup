@@ -2,7 +2,10 @@
 #                        ChangeLog for rubackup                              #
 ##############################################################################
 
-* 0.2.0
+* 0.2.1 (2015-12-01)
+  - Fixed upload of large files to AWS S3
+
+* 0.2.0 (2015-11-29)
   - Upgraded to AWS SDK version 2
 
 * 0.1.1 (2015-03-29):
