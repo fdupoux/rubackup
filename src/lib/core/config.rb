@@ -159,7 +159,7 @@ def validate_config(config)
     [
         ValidationRule.new(name='bucket', mandatory=true, defval=nil, validator=StringValidator.new),
         ValidationRule.new(name='awsregion', mandatory=true, defval=nil, validator=AwsRegionValidator.new),
-        ValidationRule.new(name='accesskey', mandatory=true, defval=nil, validator=AwsAccessKeyReferenceValidator.new),
+        ValidationRule.new(name='accesskey', mandatory=false, defval=nil, validator=AwsAccessKeyReferenceValidator.new),
     ]
     $resources["aws_s3_buckets"] = load_category(config, "aws_s3_buckets", aws_s3_buckets_val)
 
@@ -169,7 +169,7 @@ def validate_config(config)
     aws_ses_medias_val = 
     [
         ValidationRule.new(name='awsregion', mandatory=true, defval=nil, validator=AwsRegionValidator.new),
-        ValidationRule.new(name='accesskey', mandatory=true, defval=nil, validator=AwsAccessKeyReferenceValidator.new),
+        ValidationRule.new(name='accesskey', mandatory=false, defval=nil, validator=AwsAccessKeyReferenceValidator.new),
         ValidationRule.new(name='mailsrc', mandatory=true, defval=nil, validator=EmailAddressValidator.new),
         ValidationRule.new(name='maildst', mandatory=true, defval=nil, validator=EmailAddressValidator.new),
     ]

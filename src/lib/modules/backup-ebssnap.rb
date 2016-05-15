@@ -37,7 +37,7 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
             ValidationRule.new(name='fsfreeze', mandatory=false, defval=[], validator=ArrayValidator.new),
             ValidationRule.new(name='stopsvc', mandatory=false, defval=[], validator=ArrayValidator.new),
             ValidationRule.new(name='awsregion', mandatory=true, defval=nil, validator=AwsRegionValidator.new),
-            ValidationRule.new(name='accesskey', mandatory=true, defval=nil, validator=AwsAccessKeyReferenceValidator.new),
+            ValidationRule.new(name='accesskey', mandatory=false, defval=nil, validator=AwsAccessKeyReferenceValidator.new),
         ]
     end
 
@@ -50,11 +50,18 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
 
     def init_ec2_handle(backup_opts)
         awsregion = backup_opts.fetch('awsregion')
-        accesskey = backup_opts.fetch('accesskey')
-        keypublic = accesskey['public']
-        keysecret = accesskey['secret']
-        creds = Aws::Credentials.new(keypublic, keysecret)
-        @ec2 = Aws::EC2::Client.new(region: awsregion, credentials: creds)
+        # get access keys if they are defined
+        keypublic = nil
+        keysecret = nil
+        accesskey = backup_opts.fetch('accesskey', nil)
+        if accesskey then
+            keypublic = accesskey.fetch('public')
+            keysecret = accesskey.fetch('secret')
+            creds = Aws::Credentials.new(keypublic, keysecret)
+            @ec2 = Aws::EC2::Client.new(region: awsregion, credentials: creds)
+        else
+            @ec2 = Aws::EC2::Client.new(region: awsregion)
+        end
     end
 
     def detect_ebs_volumes(instid)

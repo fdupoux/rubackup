@@ -41,13 +41,20 @@ class ModuleRemoteAwsS3 < ModuleRemoteGeneric
         # extract information from parameters
         bucketdata = remote_opts.fetch('s3_bucket')
         awsregion = bucketdata.fetch('awsregion')
-        accesskey = bucketdata.fetch('accesskey')
-        keypublic = accesskey.fetch('public')
-        keysecret = accesskey.fetch('secret')
-        # get an instance of the S3 interface.
-        creds = Aws::Credentials.new(keypublic, keysecret)
-        s3clt = Aws::S3::Client.new(region: awsregion, credentials: creds)
-        s3res = Aws::S3::Resource.new(:access_key_id => keypublic, :secret_access_key => keysecret, :region => awsregion)
+        # get access keys if they are defined
+        keypublic = nil
+        keysecret = nil
+        accesskey = bucketdata.fetch('accesskey', nil)
+        if accesskey then
+            keypublic = accesskey.fetch('public')
+            keysecret = accesskey.fetch('secret')
+            creds = Aws::Credentials.new(keypublic, keysecret)
+            s3clt = Aws::S3::Client.new(region: awsregion, credentials: creds)
+            s3res = Aws::S3::Resource.new(:access_key_id => keypublic, :secret_access_key => keysecret, :region => awsregion)
+        else
+            s3clt = Aws::S3::Client.new(region: awsregion)
+            s3res = Aws::S3::Resource.new(:region => awsregion)
+        end
         # return s3 objects
         return s3clt,s3res
     end

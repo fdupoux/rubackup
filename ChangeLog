@@ -2,6 +2,9 @@
 #                        ChangeLog for rubackup                              #
 ##############################################################################
 
+* 0.2.3 (2016-05-15)
+  - Make AWS access keys optional
+
 * 0.2.2 (2016-05-15)
   - Support for long EC2 instance IDs
 

@@ -33,6 +33,9 @@ rsync -a ${RPM_BUILD_DIR}/rubackup-%{version}/src/ ${RPM_BUILD_ROOT}%{deploydir}
 
 %changelog
 
+* Sun May 15 2016 Francois Dupoux - 0.2.3-1
+- Make AWS access keys optional
+
 * Sun May 15 2016 Francois Dupoux - 0.2.2-1
 - Support for long EC2 instance IDs
 

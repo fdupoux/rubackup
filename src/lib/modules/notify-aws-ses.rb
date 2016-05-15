@@ -39,13 +39,18 @@ class ModuleNotifyAwsSes < ModuleNotifyGeneric
     def get_ses_access(sesmedia)
         # extract information from parameters
         awsregion = sesmedia.fetch('awsregion')
+        # get access keys if they are defined
+        keypublic = nil
+        keysecret = nil
         accesskey = sesmedia.fetch('accesskey')
-        keypublic = accesskey['public']
-        keysecret = accesskey['secret']
-        # get an instance of the S3 interface
-        creds = Aws::Credentials.new(keypublic, keysecret)
-        ses = Aws::SES::Client.new(region: awsregion, credentials: creds)
-        # return s3 object
+        if accesskey then
+            keypublic = accesskey.fetch('public')
+            keysecret = accesskey.fetch('secret')
+            creds = Aws::Credentials.new(keypublic, keysecret)
+            ses = Aws::SES::Client.new(region: awsregion, credentials: creds)
+        else
+            ses = Aws::SES::Client.new(region: awsregion)
+        end
         return ses
     end
 
