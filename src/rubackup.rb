@@ -26,7 +26,7 @@ require 'date'
 require 'yaml'
 
 # Define constants
-$RUBACKUP_VERSION = "0.2.1"
+$RUBACKUP_VERSION = "0.2.2"
 $RUBACKUP_MIN_RUBY = 1.9 # Required by Open3.pipeline()
 
 # Define global variables

@@ -44,7 +44,7 @@ class ModuleBackupEbsSnap < ModuleBackupGeneric
     def detect_ec2_instance_id()
         uri = URI('http://169.254.169.254/latest/meta-data/instance-id')
         instid = Net::HTTP.get(uri)
-        raise "Invalid EC2 instance ID: #{instid}" if (instid !~ /^i\-[0-9a-z]{8}$/)
+        raise "Invalid EC2 instance ID: #{instid}" if (instid !~ /^i\-[0-9a-z]{8,17}$/)
         return instid
     end
 
