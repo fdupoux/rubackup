@@ -11,11 +11,11 @@
 # This program is distributed in the hope that it will be useful,            #
 # but WITHOUT ANY WARRANTY; use it at your own risk.                         #
 #                                                                            #
-# Homepage: http://www.rubackup.org                                          #
+# Homepage: https://rubackup.gitlab.io                                       #
 #                                                                            #
 ##############################################################################
 
 rubackup is a ruby-based backup application for linux. It provides generic
 features so very different backups can be created with a single program. You
 can find more information and documentation on the official website:
-http://www.rubackup.org
+https://rubackup.gitlab.io

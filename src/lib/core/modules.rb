@@ -13,7 +13,7 @@
 # This program is distributed in the hope that it will be useful,            #
 # but WITHOUT ANY WARRANTY; use it at your own risk.                         #
 #                                                                            #
-# Homepage: http://www.rubackup.org                                          #
+# Homepage: https://rubackup.gitlab.io                                       #
 #                                                                            #
 ##############################################################################
 
